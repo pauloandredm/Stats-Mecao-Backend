@@ -1,4 +1,4 @@
-from rest_framework import viewsets
+from rest_framework import viewsets, permissions
 from analise.api import serializers
 from analise import models
 from rest_framework.response import Response
@@ -10,6 +10,8 @@ from django.shortcuts import get_object_or_404
 from rest_framework import mixins
 from django.db.models import Count, Case, When, IntegerField, Q, Value, F
 from .filters import LanceFilter
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import permission_classes
 
 
 class RegisterViewSet(viewsets.ModelViewSet):
@@ -20,21 +22,28 @@ class RegisterViewSet(viewsets.ModelViewSet):
 
 
 class JogadorViewSet(viewsets.ModelViewSet):
+    permission_classes = (IsAuthenticated,)
+
     serializer_class = serializers.JogadorSerializers
     queryset = models.Jogador.objects.all()
 
 
 class CampeonatoViewSet(viewsets.ModelViewSet):
+    permission_classes = (IsAuthenticated,)
+
     serializer_class = serializers.CampeonatoSerializers
     queryset = models.Campeonato.objects.all()
     
 
 class TimeViewSet(viewsets.ModelViewSet):
+    permission_classes = (IsAuthenticated,)
+
     serializer_class = serializers.TimeSerializers
     queryset = models.Time.objects.all()
 
 
 class ConfrontoCreateViewSet(viewsets.ModelViewSet):
+    permission_classes = (IsAuthenticated,)
     serializer_class = serializers.ConfrontoCreateSerializers
 
     def get_queryset(self):
@@ -76,6 +85,8 @@ class ConfrontoViewSet(viewsets.ModelViewSet):
 
 
 class EscalacaoViewSet(viewsets.ModelViewSet):
+    permission_classes = (IsAuthenticated,)
+
     # retorna os 11 titulares iniciais
     serializer_class = serializers.EscalacaoSerializers
     queryset = models.Escalacao.objects.all()
@@ -98,11 +109,15 @@ class EscalacaoViewSet(viewsets.ModelViewSet):
 
 
 class EscalacaoCreateViewSet(viewsets.ModelViewSet):
+    permission_classes = (IsAuthenticated,)
+    
     serializer_class = serializers.EscalacaoCreateSerializers
     queryset = models.Escalacao.objects.all()
 
 
 class EscalacaoConfrontoView(APIView):
+    permission_classes = (IsAuthenticated,)
+    
     # retorna os jogadores que estão em campo nesse minuto (titulares - subs_sairam + subs_entraram)
     # futuramente add expulsos
     def get(self, request, confronto_id, *args, **kwargs):
@@ -142,6 +157,8 @@ class EscalacaoConfrontoView(APIView):
 
 
 class EscalacaoConfrontoSemAdversarioView(APIView):
+    permission_classes = (IsAuthenticated,)
+    
     # retorna os jogadores que estão em campo nesse minuto (titulares - subs_sairam + subs_entraram)
     # futuramente add expulsos
     def get(self, request, confronto_id, *args, **kwargs):
@@ -177,6 +194,8 @@ class EscalacaoConfrontoSemAdversarioView(APIView):
 
 
 class EscalacaoEditView(APIView):
+    permission_classes = (IsAuthenticated,)
+    
     def put(self, request, confronto_id, *args, **kwargs):
         try:
             escalacao = models.Escalacao.objects.get(confronto_id=confronto_id)
@@ -208,6 +227,8 @@ class EscalacaoEditView(APIView):
 
 
 class SubstituicaoViewSet(viewsets.ModelViewSet):
+    permission_classes = (IsAuthenticated,)
+    
     queryset = models.Substituicao.objects.all()
 
     def get_serializer_class(self):
@@ -231,6 +252,8 @@ class SubstituicaoViewSet(viewsets.ModelViewSet):
     
 
 class JogadoresForaEscalacaoView(APIView):
+    permission_classes = (IsAuthenticated,)
+    
     def get(self, request, confronto_id, *args, **kwargs):
         escalacao = models.Escalacao.objects.filter(confronto_id=confronto_id).first()
 
@@ -262,6 +285,8 @@ class JogadoresForaEscalacaoView(APIView):
         
 
 class SubstituicaoConfrontoViewSet(APIView):
+    permission_classes = (IsAuthenticated,)
+    
     def get(self, request, confronto_id, *args, **kwargs):  
         try:
             substituicoes = models.Substituicao.objects.filter(confronto_id=confronto_id).order_by('minuto')
@@ -274,6 +299,8 @@ class SubstituicaoConfrontoViewSet(APIView):
     
 
 class JogadoresNaoTitularViewSet(viewsets.ViewSet):
+    permission_classes = (IsAuthenticated,)
+    
     # Retorna jogadores que não foram titulares nesse confronto (usado para o edit escalação)
     serializer_class = serializers.JogadorSerializers
 
@@ -293,6 +320,8 @@ class JogadoresNaoTitularViewSet(viewsets.ViewSet):
         
 
 class LanceViewSet(viewsets.ModelViewSet):
+    permission_classes = (IsAuthenticated,)
+    
     queryset = models.Lance.objects.all()
     serializer_class = serializers.LanceSerializer
 
@@ -326,12 +355,16 @@ class LanceViewSet(viewsets.ModelViewSet):
     
 
 class TiposLancesViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
+    permission_classes = (IsAuthenticated,)
+    
     queryset = models.Tipo_Lance.objects.all()
     serializer_class = serializers.ListaLancesSerializer
 
 
 @api_view(['DELETE'])
 def remover_jogador(request, confronto_id, jogador_id):
+    permission_classes = (IsAuthenticated,)
+    
     try:
         escalacao = models.Escalacao.objects.get(confronto_id=confronto_id)
         jogador = models.Jogador.objects.get(id=jogador_id)
@@ -350,6 +383,8 @@ def remover_jogador(request, confronto_id, jogador_id):
 
 @api_view(['POST', 'PUT'])
 def adicionar_jogador(request, confronto_id, jogador_id):
+    permission_classes = (IsAuthenticated,)
+    
     try:
         confronto = models.Confronto.objects.get(id=confronto_id)
 
@@ -378,6 +413,8 @@ def adicionar_jogador(request, confronto_id, jogador_id):
 
 @api_view(['GET'])
 def jogadores_disponiveis(request, confronto_id):
+    permission_classes = (IsAuthenticated,)
+    
     try:
         confronto = models.Confronto.objects.get(id=confronto_id)
     except models.Confronto.DoesNotExist:
@@ -409,16 +446,9 @@ def jogadores_disponiveis(request, confronto_id):
     return Response(serializer.data)
 
 
-""" class LanceCoordenadaViewSet(viewsets.ModelViewSet):
-    queryset = models.Lance.objects.all()
-    serializer_class = serializers.LanceCoordenadaSerializer
-
-    @action(detail=False, methods=['get'])
-    def filtrar_por_confronto(self, request, confronto_id):
-        lances = self.queryset.filter(confronto_id=confronto_id)
-        serializer = self.get_serializer(lances, many=True)
-        return Response(serializer.data) """
 class LanceCoordenadaViewSet(viewsets.ModelViewSet):
+    permission_classes = (IsAuthenticated,)
+    
     queryset = models.Lance.objects.all()
     serializer_class = serializers.LanceCoordenadaSerializer
 
@@ -444,6 +474,8 @@ class LanceCoordenadaViewSet(viewsets.ModelViewSet):
     
 
 class ConfrontoPlacarViewSet(viewsets.ModelViewSet):
+    permission_classes = (IsAuthenticated,)
+    
     queryset = models.Confronto.objects.all()
     serializer_class = serializers.ConfrontoPlacarSerializer
 
@@ -455,6 +487,8 @@ class ConfrontoPlacarViewSet(viewsets.ModelViewSet):
     
 
 class LanceFilterViewSet(viewsets.ModelViewSet):
+    permission_classes = (IsAuthenticated,)
+    
     queryset = models.Lance.objects.all()
     serializer_class = serializers.LanceFiltroSerializer
 
@@ -494,6 +528,8 @@ class LanceFilterViewSet(viewsets.ModelViewSet):
     
 
 class ConfrontoAcrescimosViewSet(viewsets.GenericViewSet):
+    permission_classes = (IsAuthenticated,)
+    
     queryset = models.Confronto.objects.all()
     serializer_class = serializers.ConfrontoAcrescimosSerializer
 
@@ -508,6 +544,8 @@ class ConfrontoAcrescimosViewSet(viewsets.GenericViewSet):
 
 @api_view(['GET'])
 def jogadores_no_confronto(request, confronto_id):
+    permission_classes = (IsAuthenticated,)
+    
     try:
         confronto = models.Confronto.objects.get(id=confronto_id)
     except models.Confronto.DoesNotExist:
@@ -537,13 +575,33 @@ def jogadores_no_confronto(request, confronto_id):
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 class EstatisticasJogadoresView(APIView):
+    permission_classes = (IsAuthenticated,)
+    
     def get(self, request, *args, **kwargs):
         filtered_lances = LanceFilter(request.GET, queryset=models.Lance.objects.all()).qs
         jogadores = models.Jogador.objects.exclude(id=16)
 
         # Recupera o ID do campeonato do parâmetro da query, se existir
         campeonato_id = request.query_params.get('campeonato')
+        jogo_id = request.query_params.get('jogo')
 
         estatisticas = []
         for jogador in jogadores:
@@ -579,7 +637,18 @@ class EstatisticasJogadoresView(APIView):
             passe_ql_recebido = jogador_lances.filter(tipo_lance__tipo_lance='Passe QL recebido').count()
 
             # Aplica o filtro de campeonato na contagem de partidas titulares e partidas jogadas, se um campeonato foi especificado
-            if campeonato_id:
+            if jogo_id:
+                partidas_titulares = models.Escalacao.objects.filter(
+                    jogadores=jogador,
+                    confronto__id=jogo_id  # Filtra escalacoes pelo campeonato especificado
+                ).distinct().count()
+
+                partidas_substituido = models.Substituicao.objects.filter(
+                    jogador_entrada=jogador,
+                    confronto__id=jogo_id
+                ).distinct().count()
+            
+            elif campeonato_id:
                 partidas_titulares = models.Escalacao.objects.filter(
                     jogadores=jogador,
                     confronto__campeonato_id=campeonato_id  # Filtra escalacoes pelo campeonato especificado
@@ -589,6 +658,7 @@ class EstatisticasJogadoresView(APIView):
                     jogador_entrada=jogador,
                     confronto__campeonato_id=campeonato_id
                 ).distinct().count()
+        
             else:
                 partidas_titulares = models.Escalacao.objects.filter(
                     jogadores=jogador
@@ -599,6 +669,8 @@ class EstatisticasJogadoresView(APIView):
                 ).distinct().count()
             
             partidas_jogadas = partidas_titulares + partidas_substituido
+
+
 
             ####### calculo do tempo de minutos jogador
             minutos_totais = 0
@@ -625,6 +697,8 @@ class EstatisticasJogadoresView(APIView):
                         confronto=confronto, jogador_entrada=jogador
                     ).first()
 
+                    foi_expulso = models.Lance.objects.filter(confronto=confronto, jogador=jogador, tipo_lance=11,).distinct().first()
+
                     if foi_substituido:
                         substituicao = models.Substituicao.objects.get(confronto=confronto, jogador_saida=jogador)
                         if substituicao.primeiro_tempo:
@@ -632,15 +706,75 @@ class EstatisticasJogadoresView(APIView):
                         else:
                             minutos_totais += substituicao.minuto + confronto.acrescimo1tempo
                     elif entrou_como_substituto:
-                        if entrou_como_substituto.primeiro_tempo:
-                            minutos_totais += 90 + confronto.acrescimo1tempo + confronto.acrescimo2tempo - entrou_como_substituto.minuto
+                        if foi_expulso:
+                            if foi_expulso.tempo < 2: # expulso no primeiro tempo
+                                minutos_totais += foi_expulso.minuto - entrou_como_substituto.minuto
+                            else: # expulso no segundo tempo
+                                minutos_totais += foi_expulso.minuto + confronto.acrescimo1tempo - entrou_como_substituto.minuto
                         else:
-                            minutos_totais += 90 + confronto.acrescimo2tempo - entrou_como_substituto.minuto
+                            if entrou_como_substituto.primeiro_tempo:
+                                minutos_totais += 90 + confronto.acrescimo1tempo + confronto.acrescimo2tempo - entrou_como_substituto.minuto
+                            else:
+                                minutos_totais += 90 + confronto.acrescimo2tempo - entrou_como_substituto.minuto
+                    else: # titular e não saiu
+                        if foi_expulso:
+                            if foi_expulso.tempo < 2: # expulso no primeiro tempo
+                                minutos_totais += foi_expulso.minuto
+                            else: # expulso no segundo tempo
+                                minutos_totais += foi_expulso.minuto + confronto.acrescimo1tempo
+                        else:
+                            minutos_totais += 90 + confronto.acrescimo1tempo + confronto.acrescimo2tempo
+            
+            elif jogo_id:
+
+                confrontos_jogador_titular = models.Confronto.objects.filter(
+                    id = jogo_id, escalacao__jogadores=jogador,
+                ).distinct()
+
+                confrontos_jogador_entrou = models.Confronto.objects.filter(
+                    id = jogo_id, substituicao__jogador_entrada=jogador,
+                ).distinct()
+
+                foi_expulso = models.Lance.objects.filter(confronto=jogo_id, jogador=jogador, tipo_lance=11,).distinct().first()
+
+                try:
+                    confronto = models.Confronto.objects.get(id=jogo_id)
+                except models.Confronto.DoesNotExist:
+                    # Trate o caso em que o confronto não existe
+                    # Por exemplo, retornando uma resposta de erro
+                    return Response({"error": "Confronto não encontrado."}, status=status.HTTP_404_NOT_FOUND)
+
+                # Depois, verifique as condições relacionadas ao jogador sendo titular, entrando ou saindo
+                if confrontos_jogador_titular.exists():
+                    substituicao_saida = models.Substituicao.objects.filter(confronto=confronto, jogador_saida=jogador).first()
+                    if foi_expulso:
+                        if foi_expulso.tempo < 2: # expulso no primeiro tempo
+                            minutos_totais += foi_expulso.minuto
+                        else: # expulso no segundo tempo
+                            minutos_totais += foi_expulso.minuto + confronto.acrescimo1tempo
+
+                    elif substituicao_saida:
+                        if substituicao_saida.primeiro_tempo:
+                            minutos_totais = substituicao_saida.minuto
+                        else:
+                            minutos_totais = substituicao_saida.minuto + confronto.acrescimo1tempo
                     else:
-                        minutos_totais += 90 + confronto.acrescimo1tempo + confronto.acrescimo2tempo
+                        minutos_totais = 90 + confronto.acrescimo1tempo + confronto.acrescimo2tempo
 
+                elif confrontos_jogador_entrou.exists():
+                    substituicao_entrada = models.Substituicao.objects.filter(confronto=confronto, jogador_entrada=jogador).first()
+                    if foi_expulso:
+                        if foi_expulso.tempo < 2: # expulso no primeiro tempo
+                            minutos_totais += foi_expulso.minuto
+                        else: # expulso no segundo tempo
+                            minutos_totais += foi_expulso.minuto + confronto.acrescimo1tempo
+                    elif substituicao_entrada:
+                        if substituicao_entrada.primeiro_tempo:
+                            minutos_totais = 90 + confronto.acrescimo1tempo + confronto.acrescimo2tempo - substituicao_entrada.minuto
+                        else:
+                            minutos_totais = 90 + confronto.acrescimo2tempo - substituicao_entrada.minuto
 
-            else:
+            else: #sem nenhum filtro
 
                 confrontos_jogador_titular = models.Confronto.objects.filter(
                     escalacao__jogadores=jogador,
@@ -660,6 +794,8 @@ class EstatisticasJogadoresView(APIView):
                         confronto=confronto, jogador_entrada=jogador
                     ).first()
 
+                    foi_expulso = models.Lance.objects.filter(confronto=confronto, jogador=jogador, tipo_lance=11,).distinct().first()
+
                     if foi_substituido:
                         substituicao = models.Substituicao.objects.get(confronto=confronto, jogador_saida=jogador)
                         if substituicao.primeiro_tempo:
@@ -667,12 +803,24 @@ class EstatisticasJogadoresView(APIView):
                         else:
                             minutos_totais += substituicao.minuto + confronto.acrescimo1tempo
                     elif entrou_como_substituto:
-                        if entrou_como_substituto.primeiro_tempo:
-                            minutos_totais += 90 + confronto.acrescimo1tempo + confronto.acrescimo2tempo - entrou_como_substituto.minuto
+                        if foi_expulso:
+                            if foi_expulso.tempo < 2: # expulso no primeiro tempo
+                                minutos_totais += foi_expulso.minuto
+                            else: # expulso no segundo tempo
+                                minutos_totais += foi_expulso.minuto + confronto.acrescimo1tempo
                         else:
-                            minutos_totais += 90 + confronto.acrescimo2tempo - entrou_como_substituto.minuto
+                            if entrou_como_substituto.primeiro_tempo:
+                                minutos_totais += 90 + confronto.acrescimo1tempo + confronto.acrescimo2tempo - entrou_como_substituto.minuto
+                            else:
+                                minutos_totais += 90 + confronto.acrescimo2tempo - entrou_como_substituto.minuto
                     else:
-                        minutos_totais += 90 + confronto.acrescimo1tempo + confronto.acrescimo2tempo
+                        if foi_expulso:
+                            if foi_expulso.tempo < 2: # expulso no primeiro tempo
+                                minutos_totais += foi_expulso.minuto
+                            else: # expulso no segundo tempo
+                                minutos_totais += foi_expulso.minuto + confronto.acrescimo1tempo
+                        else:
+                            minutos_totais += 90 + confronto.acrescimo1tempo + confronto.acrescimo2tempo
 
             if partidas_jogadas == 0:
                 media_minutos = 0
@@ -689,6 +837,9 @@ class EstatisticasJogadoresView(APIView):
             # esperado
             """ gols_assists_esperados = gols_esperados + assists_esperados """
             # per 90 min
+            if minutos_totais == 0:
+                minutos_totais = 0.0000000001
+
             tempo_div_90 = minutos_totais/90
 
             gols_p_90min = round((gols_total/tempo_div_90), 3)
@@ -713,7 +864,7 @@ class EstatisticasJogadoresView(APIView):
                 # tempo
                 'partidas_titulares': partidas_titulares,
                 'partidas_jogadas': partidas_jogadas,
-                'minutos_totais': minutos_totais,
+                'minutos_totais': int(minutos_totais),
                 'media_minutos': media_minutos,
 
                 # desempenho
@@ -760,11 +911,30 @@ class EstatisticasJogadoresView(APIView):
         return Response(estatisticas)
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 class EstatisticasTimeView(APIView):
+    permission_classes = (IsAuthenticated,)
+    
     def get(self, request, *args, **kwargs):
         filtered_lances = LanceFilter(request.GET, queryset=models.Lance.objects.all()).qs
 
         campeonato_id = request.query_params.get('campeonato')
+        jogo_id = request.query_params.get('jogo')
 
         estatisticas_time = {
             # desempenho
@@ -818,7 +988,9 @@ class EstatisticasTimeView(APIView):
         ############### pegando os dados para o response ###############
 
         # tempo
-        if campeonato_id:
+        if jogo_id:
+            estatisticas_time['partidas_jogadas'] = models.Confronto.objects.filter(id=jogo_id).count()
+        elif campeonato_id:
             estatisticas_time['partidas_jogadas'] = models.Confronto.objects.filter(campeonato_id=campeonato_id).count()
         else:
             estatisticas_time['partidas_jogadas'] = models.Confronto.objects.count()

@@ -28,10 +28,6 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
     def get_token(cls, user):
         token = super().get_token(user)
-
-        # Adicione campos extras ao payload do token
-        token['is_gestor'] = user.is_gestor
-
         return token
 
 class JogadorSerializers(serializers.ModelSerializer):
