@@ -29,14 +29,12 @@ class JogadorViewSet(viewsets.ModelViewSet):
 
 
 class CampeonatoViewSet(viewsets.ModelViewSet):
-    permission_classes = (IsAuthenticated,)
 
     serializer_class = serializers.CampeonatoSerializers
     queryset = models.Campeonato.objects.all()
     
 
 class TimeViewSet(viewsets.ModelViewSet):
-    permission_classes = (IsAuthenticated,)
 
     serializer_class = serializers.TimeSerializers
     queryset = models.Time.objects.all()
