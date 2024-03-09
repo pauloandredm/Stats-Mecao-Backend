@@ -29,7 +29,7 @@ $PROJECT_BASE_PATH/env/bin/python $PROJECT_BASE_PATH/manage.py migrate
 cp $PROJECT_BASE_PATH/deploy/supervisor_data_analise.conf /etc/supervisor/conf.d/data_analise.conf
 supervisorctl reread
 supervisorctl update
-supervisorctl restart profiles_api
+supervisorctl restart data_analise
 
 # Setup nginx to make our application accessible.
 cp $PROJECT_BASE_PATH/deploy/nginx_data_analise.conf /etc/nginx/sites-available/data_analise.conf
