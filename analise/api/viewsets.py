@@ -455,6 +455,8 @@ class LanceCoordenadaViewSet(viewsets.ModelViewSet):
         confronto_id = request.query_params.get('confronto_id')
         jogador_id = request.query_params.get('jogador')
         tipo_lance_ids = request.query_params.getlist('tipo_lance')  # Usa getlist para pegar uma lista de valores
+        tempo = request.query_params.get('tempo')
+        campo = request.query_params.get('campo')
 
         # Filtrar por confronto
         lances = self.queryset.filter(confronto_id=confronto_id)
@@ -466,6 +468,19 @@ class LanceCoordenadaViewSet(viewsets.ModelViewSet):
         # Filtrar por tipo de lance, se fornecido
         if tipo_lance_ids:
             lances = lances.filter(tipo_lance_id__in=tipo_lance_ids)  # Filtrar por múltiplos IDs usando __in
+
+        # Filtrar por tempo
+        if tempo == "1":
+            lances = lances.filter(tempo__in=[1, 0])  # Inclui lances sem tempo definido (tempo=0)
+        elif tempo == "2":
+            lances = lances.filter(tempo=2)
+
+        # Filtrar por campo
+        if campo == "defesa":
+            lances = lances.filter(coordenadaX__gt=300)
+        elif campo == "ataque":
+            lances = lances.filter(coordenadaX__lte=300)
+            
 
         serializer = self.get_serializer(lances, many=True)
         return Response(serializer.data)
