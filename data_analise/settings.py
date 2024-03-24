@@ -28,7 +28,7 @@ SECRET_KEY = 'django-insecure-82h=5ly5#-%z$0xr)&(nbw$*^e$!^prv9din$&ik)t^0(2u_(2
 DEBUG = bool(int(os.environ.get('DEBUG', 1)))
 
 ALLOWED_HOSTS = ['ec2-54-232-3-150.sa-east-1.compute.amazonaws.com',
-                 'https://stats-mecao-frontend-7nq3vwmi9-pauloandredm.vercel.app',
+                 'https://stats-mecao-frontend.vercel.app',
                   '127.0.0.1',
                   '*'
 ]
@@ -62,6 +62,7 @@ MIDDLEWARE = [
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # Adicione a origem do seu frontend React
+    "https://stats-mecao-frontend.vercel.app"
 ]
 
 ROOT_URLCONF = 'data_analise.urls'
