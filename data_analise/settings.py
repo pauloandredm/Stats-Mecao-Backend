@@ -62,7 +62,9 @@ MIDDLEWARE = [
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # Adicione a origem do seu frontend React
-    "https://stats-mecao-frontend.vercel.app"
+    "https://stats-mecao-frontend.vercel.app",
+    "https://statsamerica.com.br",
+    "https://www.statsamerica.com.br"
 ]
 
 ROOT_URLCONF = 'data_analise.urls'
