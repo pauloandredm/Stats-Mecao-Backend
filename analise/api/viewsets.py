@@ -12,6 +12,7 @@ from django.db.models import Count, Case, When, IntegerField, Q, Value, F
 from .filters import LanceFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import permission_classes
+from analise.permissions import IsAdminOrStaff
 
 
 class RegisterViewSet(viewsets.ModelViewSet):
@@ -19,13 +20,6 @@ class RegisterViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.RegisterSerializer
     queryset = models.CustomUser.objects.all()
     search_fields = ('name', 'cpf',)
-
-
-class JogadorViewSet(viewsets.ModelViewSet):
-    permission_classes = (IsAuthenticated,)
-
-    serializer_class = serializers.JogadorSerializers
-    queryset = models.Jogador.objects.all()
 
 
 class CampeonatoViewSet(viewsets.ModelViewSet):
@@ -41,8 +35,18 @@ class TimeViewSet(viewsets.ModelViewSet):
 
 
 class ConfrontoCreateViewSet(viewsets.ModelViewSet):
-    permission_classes = (IsAuthenticated,)
+
     serializer_class = serializers.ConfrontoCreateSerializers
+
+    def get_permissions(self):
+        """
+        Retorna as permissões de instância para a ação solicitada.
+        """
+        if self.action == 'list' or self.action == 'retrieve':
+            permission_classes = [IsAuthenticated]
+        else:
+            permission_classes = [IsAdminOrStaff]
+        return [permission() for permission in permission_classes]
 
     def get_queryset(self):
         queryset = models.Confronto.objects.all()
@@ -104,13 +108,6 @@ class EscalacaoViewSet(viewsets.ModelViewSet):
         escalacoes = self.get_queryset().filter(confronto_id=confronto_id)
         serializer = self.get_serializer(escalacoes, many=True)
         return Response(serializer.data)
-
-
-class EscalacaoCreateViewSet(viewsets.ModelViewSet):
-    permission_classes = (IsAuthenticated,)
-    
-    serializer_class = serializers.EscalacaoCreateSerializers
-    queryset = models.Escalacao.objects.all()
 
 
 class EscalacaoConfrontoView(APIView):
@@ -190,44 +187,19 @@ class EscalacaoConfrontoSemAdversarioView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-
-class EscalacaoEditView(APIView):
-    permission_classes = (IsAuthenticated,)
-    
-    def put(self, request, confronto_id, *args, **kwargs):
-        try:
-            escalacao = models.Escalacao.objects.get(confronto_id=confronto_id)
-            jogador_saida_id = request.data.get('jogador_saida_id')
-            jogador_entrada_id = request.data.get('jogador_entrada_id')
-            
-            # Garanta que os IDs foram fornecidos
-            if jogador_saida_id is None or jogador_entrada_id is None:
-                return Response({"detail": "Os IDs de jogador_saida_id e jogador_entrada_id são obrigatórios."},
-                                status=status.HTTP_400_BAD_REQUEST)
-            
-            # Obtenha as instâncias dos jogadores
-            jogador_saida = get_object_or_404(models.Jogador, pk=jogador_saida_id)
-            jogador_entrada = get_object_or_404(models.Jogador, pk=jogador_entrada_id)
-
-
-            # Adicione o jogador de entrada à escalação
-            escalacao.jogadores.add(jogador_entrada)
-            # Remova o jogador de saída da escalação
-            escalacao.jogadores.remove(jogador_saida)
-
-            # Serializar dados
-            serializer = serializers.EscalacaoSerializers(escalacao)
-
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        except models.Escalacao.DoesNotExist:
-            return Response({"detail": "Escalacao não encontrada para o confronto especificado."}, status=status.HTTP_404_NOT_FOUND)
-        
-
-
 class SubstituicaoViewSet(viewsets.ModelViewSet):
-    permission_classes = (IsAuthenticated,)
     
     queryset = models.Substituicao.objects.all()
+
+    def get_permissions(self):
+        """
+        Retorna as permissões de instância para a ação solicitada.
+        """
+        if self.action == 'list' or self.action == 'retrieve':
+            permission_classes = [IsAuthenticated]
+        else:
+            permission_classes = [IsAdminOrStaff]
+        return [permission() for permission in permission_classes]
 
     def get_serializer_class(self):
         if self.action == 'create':
@@ -318,10 +290,19 @@ class JogadoresNaoTitularViewSet(viewsets.ViewSet):
         
 
 class LanceViewSet(viewsets.ModelViewSet):
-    permission_classes = (IsAuthenticated,)
     
     queryset = models.Lance.objects.all()
     serializer_class = serializers.LanceSerializer
+
+    def get_permissions(self):
+        """
+        Retorna as permissões de instância para a ação solicitada.
+        """
+        if self.action in ['list', 'retrieve', 'filtrar_por_confronto']:
+            permission_classes = [IsAuthenticated]
+        else:
+            permission_classes = [IsAdminOrStaff]
+        return [permission() for permission in permission_classes]
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -361,7 +342,11 @@ class TiposLancesViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
 
 @api_view(['DELETE'])
 def remover_jogador(request, confronto_id, jogador_id):
-    permission_classes = (IsAuthenticated,)
+
+    permission = IsAdminOrStaff()
+
+    if not permission.has_permission(request, view=None):
+        return Response({"detail": "Permissão negada."}, status=status.HTTP_403_FORBIDDEN)
     
     try:
         escalacao = models.Escalacao.objects.get(confronto_id=confronto_id)
@@ -381,7 +366,11 @@ def remover_jogador(request, confronto_id, jogador_id):
 
 @api_view(['POST', 'PUT'])
 def adicionar_jogador(request, confronto_id, jogador_id):
-    permission_classes = (IsAuthenticated,)
+
+    permission = IsAdminOrStaff()
+
+    if not permission.has_permission(request, view=None):
+        return Response({"detail": "Permissão negada."}, status=status.HTTP_403_FORBIDDEN)
     
     try:
         confronto = models.Confronto.objects.get(id=confronto_id)
@@ -487,7 +476,15 @@ class LanceCoordenadaViewSet(viewsets.ModelViewSet):
     
 
 class ConfrontoPlacarViewSet(viewsets.ModelViewSet):
-    permission_classes = (IsAuthenticated,)
+    def get_permissions(self):
+        """
+        Retorna as permissões de instância para a ação solicitada.
+        """
+        if self.action in ['list', 'retrieve', 'filtrar_por_confronto']:  # Adicione 'filtrar_por_confronto' aqui
+            permission_classes = [IsAuthenticated]
+        else:
+            permission_classes = [IsAdminOrStaff]
+        return [permission() for permission in permission_classes]
     
     queryset = models.Confronto.objects.all()
     serializer_class = serializers.ConfrontoPlacarSerializer
@@ -498,53 +495,22 @@ class ConfrontoPlacarViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(placar, many=True)
         return Response(serializer.data)
     
-
-class LanceFilterViewSet(viewsets.ModelViewSet):
-    permission_classes = (IsAuthenticated,)
-    
-    queryset = models.Lance.objects.all()
-    serializer_class = serializers.LanceFiltroSerializer
-
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        campeonato_ids = self.request.query_params.getlist('campeonato')
-        tipo_lance_ids = self.request.query_params.getlist('tipo_lance')
-        jogador_ids = self.request.query_params.getlist('jogador')
-        jogo_ids = self.request.query_params.getlist('jogo')
-        minuto_inicio = self.request.query_params.get('minuto_inicio', 0)
-        minuto_fim = self.request.query_params.get('minuto_fim', 1000)
-        """ coordenadaX_inicio = self.request.query_params.get('coordenadaX_inicio')
-        coordenadaY_inicio = self.request.query_params.get('coordenadaY_inicio')
-        coordenadaX_fim = self.request.query_params.get('coordenadaX_fim')
-        coordenadaY_fim = self.request.query_params.get('coordenadaY_fim') """
-
-        if campeonato_ids:
-            queryset = queryset.filter(confronto__campeonato__id__in=campeonato_ids)
-        if tipo_lance_ids:
-            queryset = queryset.filter(tipo_lance__id__in=tipo_lance_ids)
-        if jogador_ids:
-            queryset = queryset.filter(jogador__id__in=jogador_ids)
-        if jogo_ids:
-            queryset = queryset.filter(confronto__id__in=jogo_ids)
-
-        queryset = queryset.filter(minuto__gte=minuto_inicio, minuto__lte=minuto_fim)
-
-        # Para a filtragem por coordenadas, você precisará definir uma lógica
-        # específica que considere os limites do retângulo formado pelas coordenadas de início e fim
-        """ if coordenadaX_inicio and coordenadaY_inicio and coordenadaX_fim and coordenadaY_fim:
-            queryset = queryset.filter(
-                coordenadaX__gte=coordenadaX_inicio, coordenadaX__lte=coordenadaX_fim,
-                coordenadaY__gte=coordenadaY_inicio, coordenadaY__lte=coordenadaY_fim
-            ) """
-        
-        return queryset
     
 
 class ConfrontoAcrescimosViewSet(viewsets.GenericViewSet):
-    permission_classes = (IsAuthenticated,)
     
     queryset = models.Confronto.objects.all()
     serializer_class = serializers.ConfrontoAcrescimosSerializer
+
+    def get_permissions(self):
+        """
+        Retorna as permissões de instância para a ação solicitada.
+        """
+        if self.action == 'list' or self.action == 'retrieve':
+            permission_classes = [IsAuthenticated]
+        else:
+            permission_classes = [IsAdminOrStaff]
+        return [permission() for permission in permission_classes]
 
     def partial_update(self, request, pk=None):
         confronto = self.get_object()

@@ -24,18 +24,15 @@ from analise.api import serializers
 
 route = routers.DefaultRouter()
 route.register('register', analiseviewsets.RegisterViewSet)
-route.register(r'Jogador', analiseviewsets.JogadorViewSet, basename="jogador")
 route.register(r'Campeonato', analiseviewsets.CampeonatoViewSet, basename="campeonato")
 route.register(r'Time', analiseviewsets.TimeViewSet, basename="Time")
 route.register(r'Confronto', analiseviewsets.ConfrontoCreateViewSet, basename="Confronto")
 route.register(r'ConfrontoView', analiseviewsets.ConfrontoViewSet, basename="ConfrontoView")
 route.register(r'Escalacao', analiseviewsets.EscalacaoViewSet, basename="Escalacao")
-route.register(r'EscalacaoCreate', analiseviewsets.EscalacaoCreateViewSet, basename="EscalacaoCreate")
 route.register(r'Substituicao', analiseviewsets.SubstituicaoViewSet, basename="Substituicao")
 route.register(r'lances', analiseviewsets.LanceViewSet)
 route.register(r'confrontos', analiseviewsets.ConfrontoPlacarViewSet)
 route.register(r'tiposLances', analiseviewsets.TiposLancesViewSet, basename='tiposLances')
-route.register(r'lancesFiltro', analiseviewsets.LanceFilterViewSet)
 route.register(r'confrontos/acrescimos',  analiseviewsets.ConfrontoAcrescimosViewSet, basename='confronto-acrescimos')
 route.register(r'lancescoordenada', analiseviewsets.LanceCoordenadaViewSet, basename='lancecoordenada')
 
@@ -49,7 +46,6 @@ urlpatterns = [
     path('em_campo/confronto/<int:confronto_id>/', analiseviewsets.EscalacaoConfrontoSemAdversarioView.as_view(), name='em_campo_confronto'),
     path('reservas/confronto/<int:confronto_id>/', analiseviewsets.JogadoresForaEscalacaoView.as_view(), name='reservas_confronto'),
     path('substituicao/confronto/<int:confronto_id>/', analiseviewsets.SubstituicaoConfrontoViewSet.as_view(), name='substituicao_confronto'),
-    path('escalacaoedit/confronto/<int:confronto_id>/', analiseviewsets.EscalacaoEditView.as_view(), name='escalacao_edit'),
     path('jogadores-nao-titulares/', analiseviewsets.JogadoresNaoTitularViewSet.as_view({'get': 'list'}), name='jogadores-nao-titulares'),
     path('remover_jogador/<int:confronto_id>/<int:jogador_id>/', analiseviewsets.remover_jogador, name='remover_jogador'),
     path('adicionar_jogador/<int:confronto_id>/<int:jogador_id>/', analiseviewsets.adicionar_jogador, name='adicionar_jogador'),
